@@ -3,18 +3,18 @@ import os
 
 # This is where the files will be output to
 # package is the default
-# Settings Game
-if builder.options.sdks == 'tf2':
-  builder.SetBuildFolder('Package-tf2')
+builder.SetBuildFolder('package')
 
 # Add any folders you need to this list
 folder_list = [
   'addons',
   'addons/tickrate_enabler',
-  #'addons/sourcemod/scripting/include',
-  #'addons/sourcemod/gamedata',
-  #'addons/sourcemod/configs',
 ]
+
+if 'x86_64' in Extension.target_archs:
+  folder_list.extend([
+    'addons/tickrate_enabler/x64',
+  ])
 
 # Create the distribution folder hierarchy.
 folder_map = {}
@@ -31,35 +31,14 @@ def CopyFiles(src, dest, files):
     source_path = os.path.join(builder.sourcePath, src, source_file)
     builder.AddCopy(source_path, dest_entry)
 
-# Include files 
-#CopyFiles('include', 'addons/sourcemod/scripting/include',
-#  [ 'sample.inc', ]
-#)
-
-# GameData files
-#CopyFiles('', 'addons/sourcemod/gamedata',
-#  [ 'default.txt' ]
-#)
-
-# Config Files
-#CopyFiles('configs', 'addons/sourcemod/configs',
-#  [ 'configfile.cfg',
-#  'otherconfig.cfg,
-#  ]
-#)
+# VDF file
+CopyFiles('', 'addons',
+  [ 'tickrate_enabler.vdf' ]
+)
 
 # Copy binaries.
 for cxx_task in Extension.extensions:
-  builder.AddCopy(cxx_task.binary, folder_map['addons/tickrate_enabler'])
-
-# Autoload file
-#CopyFiles('', 'addons/sourcemod/extensions',
-#  [ 'default.autoload' ]
-#)
-
-# VDF file
-
-if builder.options.sdks == 'tf2':
-  CopyFiles('', 'addons',
-  [ 'tickrate_enabler.vdf' ]
-)
+  if cxx_task.target.arch == 'x86_64':
+    builder.AddCopy(cxx_task.binary, folder_map['addons/tickrate_enabler/x64'])
+  else:
+    builder.AddCopy(cxx_task.binary, folder_map['addons/tickrate_enabler'])

@@ -28,22 +28,11 @@
  *
  * Version: $Id$
  */
-#include <cstdlib>
-#include "memutils.h"
 #include "tier0/icommandline.h"
-
 #include "sourcehook.h"
 #include "sourcehook_impl.h"
 #include "sourcehook_impl_chookidman.h"
-
-#include "codepatch/patchmanager.h"
-
 #include "tickrate_enabler.h"
-#include "patchexceptions.h"
-
-// #include "pipebombpatch.h"
-// memdbgon must be the last include file in a .cpp file!!!
-#include "tier0/memdbgon.h"
 
 #define VERSION "1.0"
 
@@ -92,8 +81,6 @@ float GetTickInterval()
 IServerGameDLL *gamedll = NULL;
 IVEngineServer *engine = NULL;
 
-// ICvar * g_pCvar = NULL;
-
 //---------------------------------------------------------------------------------
 // Purpose: called when the plugin is loaded, load the interface we need from the engine
 //---------------------------------------------------------------------------------
@@ -112,30 +99,10 @@ bool TF2TickRate::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gam
 		return false;
 	}
 
-	Msg("Tickrate_Enabler: Found ServerGameDLL at 0x%08x\n", gamedll);
-	Msg("Tickrate_Enabler: Found VEngineServer at 0x%08x\n", engine);
+	Msg("Tickrate_Enabler: Found ServerGameDLL at %p\n", gamedll);
+	Msg("Tickrate_Enabler: Found VEngineServer at %p\n", engine);
 
 	SH_ADD_HOOK(IServerGameDLL, GetTickInterval, gamedll, SH_STATIC(GetTickInterval), false);
-
-	// try
-	// {
-	// 	m_patchManager.Register(new PipeBombFrameTimePatch(gamedll));
-	// 	// sentry midfunc hook patch here!!!
-	// 	m_patchManager.PatchAll();
-	// }
-	// catch (PatchException &e)
-	// {
-	// 	Error("!!!!!\nPatch Failure: %s\n!!!!!\n", e.GetDescription());
-	// 	Error("Failed to process all tickrate_enabler patches, bailing out.\n");
-	// 	return false;
-	// }
-
-	// g_pCvar = reinterpret_cast<ICvar *>(interfaceFactory(CVAR_INTERFACE_VERSION,NULL));
-	// if(g_pCvar == NULL)
-	//{
-	//	Error("RecordingHelpers: Failed to get Cvar interface.\n");
-	//	return false;
-	// }
 
 	return true;
 }
@@ -145,8 +112,6 @@ bool TF2TickRate::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gam
 //---------------------------------------------------------------------------------
 void TF2TickRate::Unload(void)
 {
-	m_patchManager.UnpatchAll();
-	m_patchManager.UnregisterAll();
 	SH_REMOVE_HOOK(IServerGameDLL, GetTickInterval, gamedll, SH_STATIC(GetTickInterval), false);
 }
 
