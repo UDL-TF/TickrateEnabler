@@ -1,0 +1,88 @@
+name: Build Tickrate Enabler
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+  release:
+    types: [created, published]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up dependencies
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang \
+            g++-multilib \
+            gcc-multilib \
+            python3 \
+            python3-pip \
+            git \
+            zip \
+            lib32stdc++6 \
+            lib32gcc-s1
+
+      - name: Install AMBuild
+        run: |
+          python3 -m pip install --upgrade pip setuptools wheel
+          pip install git+https://github.com/alliedmodders/ambuild
+
+      - name: Clone Metamod:Source
+        run: |
+          git clone --branch master --recurse-submodules https://github.com/alliedmodders/metamod-source.git metamod-source
+
+      - name: Clone HL2SDK Manifests
+        run: |
+          git clone https://github.com/alliedmodders/hl2sdk-manifests.git hl2sdk-manifests
+
+      - name: Clone HL2SDK TF2
+        run: |
+          git clone --branch tf2 https://github.com/alliedmodders/hl2sdk.git hl2sdk-tf2
+
+      - name: Create build directory
+        run: mkdir -p build
+
+      - name: Configure build
+        working-directory: build
+        run: |
+          python3 ../configure.py \
+            --enable-optimize \
+            --hl2sdk-manifest-path=${{ github.workspace }}/hl2sdk-manifests \
+            --mms-path=${{ github.workspace }}/metamod-source \
+            --hl2sdk-root=${{ github.workspace }} \
+            --targets=x86
+
+      - name: Build project
+        working-directory: build
+        run: ambuild
+
+      - name: Package artifacts
+        working-directory: build/package
+        run: |
+          zip -r ../../TickrateEnabler-linux.zip addons/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: TickrateEnabler-linux
+          path: TickrateEnabler-linux.zip
+          retention-days: 30
+
+      - name: Upload to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: TickrateEnabler-linux.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
