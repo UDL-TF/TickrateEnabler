@@ -34,7 +34,7 @@
 #include "sourcehook_impl_chookidman.h"
 #include "tickrate_enabler.h"
 
-#define VERSION "1.0"
+#define VERSION "1.0.1"
 
 TF2TickRate g_TF2TickRatePlugin;
 EXPOSE_SINGLE_INTERFACE_GLOBALVAR(TF2TickRate, IServerPluginCallbacks, INTERFACEVERSION_ISERVERPLUGINCALLBACKS, g_TF2TickRatePlugin);
